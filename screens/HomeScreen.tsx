@@ -6,18 +6,15 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
-  Modal,
-  TextInput,
   Platform,
   Image,
-  KeyboardAvoidingView,
   ScrollView,
   Animated,
-  PanResponder,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { LoginModal, RegisterModal, OtpModal, Profil } from '../components/AuthModals';
 
 const { width, height } = Dimensions.get('window');
 
@@ -208,194 +205,12 @@ animate();
 </body>
 </html>`;
 
-// ─── Auth Modal améliorée avec option de connexion directement ─────────────────
-interface AuthModalProps {
-  visible: boolean;
-  onClose: () => void;
-  defaultStep?: 'choose' | 'email';
-}
-
-const AuthModal: React.FC<AuthModalProps> = ({ visible, onClose, defaultStep = 'choose' }) => {
-  const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'choose' | 'email'>(defaultStep);
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      setStep(defaultStep);
-      Animated.spring(slideAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    } else {
-      slideAnim.setValue(0);
-      setEmail('');
-    }
-  }, [visible, defaultStep]);
-
-  const handleClose = () => { 
-    Animated.timing(slideAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setStep('choose');
-      setEmail('');
-      onClose();
-    });
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
-      <View style={styles.modalOverlay}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={handleClose} activeOpacity={1} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <Animated.View 
-            style={[
-              styles.modalSheet,
-              {
-                transform: [{
-                  translateY: slideAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [600, 0],
-                  })
-                }]
-              }
-            ]}
-          >
-            <LinearGradient
-              colors={['#FFFFFF', '#F8F9FF']}
-              style={styles.modalGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.modalHandle} />
-
-              <Image source={require('../assets/logo.png')} style={styles.modalLogo} resizeMode="contain" />
-              <Text style={styles.modalTitle}>Bienvenue</Text>
-              <Text style={styles.modalSubtitle}>
-                Connectez-vous pour découvrir des expériences locales authentiques à travers le monde
-              </Text>
-
-              {step === 'choose' ? (
-                <>
-                  <TouchableOpacity style={styles.socialGoogle} activeOpacity={0.8}>
-                    <LinearGradient
-                      colors={['#FFFFFF', '#FFFFFF']}
-                      style={styles.socialGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <FontAwesome5 name="google" size={18} color="#4285F4" />
-                      <Text style={styles.socialGoogleText}>Continuer avec Google</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.socialApple} activeOpacity={0.8}>
-                    <LinearGradient
-                      colors={['#1A1A2E', '#2D2D44']}
-                      style={styles.socialGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <FontAwesome5 name="apple" size={20} color="#FFFFFF" />
-                      <Text style={styles.socialAppleText}>Continuer avec Apple</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.socialEmail} onPress={() => setStep('email')} activeOpacity={0.8}>
-                    <LinearGradient
-                      colors={['#EEF3FF', '#E8EFFF']}
-                      style={styles.socialGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <FontAwesome5 name="envelope" size={16} color="#1C6BF4" />
-                      <Text style={styles.socialEmailText}>Continuer avec l'email</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <View style={styles.dividerRow}>
-                    <View style={styles.divLine} />
-                    <Text style={styles.divText}>Vous êtes</Text>
-                    <View style={styles.divLine} />
-                  </View>
-
-                  <View style={styles.roleRow}>
-                    <TouchableOpacity style={styles.roleBtn} activeOpacity={0.8}>
-                      <FontAwesome5 name="globe-americas" size={16} color="#1C6BF4" />
-                      <Text style={styles.roleBtnText}>Voyageur</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.roleBtn, styles.roleBtnActive]} activeOpacity={0.8}>
-                      <LinearGradient
-                        colors={['#1C6BF4', '#1557CC']}
-                        style={StyleSheet.absoluteFill}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      />
-                      <FontAwesome5 name="store" size={16} color="#FFFFFF" />
-                      <Text style={[styles.roleBtnText, styles.roleBtnTextActive]}>Prestataire</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <Text style={styles.legalText}>
-                    En continuant, vous acceptez nos{' '}
-                    <Text style={styles.legalLink}>CGU</Text>{' '}et notre{' '}
-                    <Text style={styles.legalLink}>Politique de confidentialité</Text>
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.emailInputLabel}>Adresse email</Text>
-                  <View style={styles.emailInputBox}>
-                    <FontAwesome5 name="envelope" size={14} color="#B0B0C8" />
-                    <TextInput
-                      style={styles.emailInput}
-                      placeholder="votre@email.com"
-                      placeholderTextColor="#C0C0D0"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoFocus
-                      value={email}
-                      onChangeText={setEmail}
-                    />
-                  </View>
-                  <Text style={styles.emailHint}>
-                    <FontAwesome5 name="info-circle" size={11} color="#B0B0C8" />
-                    {'  '}Un lien de connexion vous sera envoyé — sans mot de passe.
-                  </Text>
-
-                  <TouchableOpacity style={styles.submitBtn} activeOpacity={0.8}>
-                    <LinearGradient
-                      colors={['#1C6BF4', '#1557CC', '#0E3D8C']}
-                      style={styles.submitGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <Text style={styles.submitLabel}>Envoyer le lien</Text>
-                      <FontAwesome5 name="arrow-right" size={14} color="#FFFFFF" />
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => setStep('choose')} style={styles.backBtn} activeOpacity={0.7}>
-                    <FontAwesome5 name="arrow-left" size={12} color="#B0B0C8" />
-                    <Text style={styles.backText}>Retour</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </LinearGradient>
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
-  );
-};
-
-// ─── HomeScreen améliorée sans bouton connexion en haut ─────────────────────
+// ─── HomeScreen ────────────────────────────────────────────────────────────
 const HomeScreen: React.FC = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [activeModal, setActiveModal] = useState<'none' | 'login' | 'register' | 'otp'>('none');
+  const [presetProfil, setPresetProfil] = useState<Profil | undefined>(undefined);
+  const [otpEmail, setOtpEmail] = useState('');
+
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(30)).current;
@@ -430,9 +245,31 @@ const HomeScreen: React.FC = () => {
     { key: 'histoire', label: 'Histoire', icon: 'scroll', color: '#FF6B6B' },
   ];
 
-  // Fonction pour ouvrir le modal directement avec l'option de connexion
-  const openAuthModal = (userType?: 'traveler' | 'provider') => {
-    setModalVisible(true);
+  // ── Handlers d'auth (mirrors web modals.blade.php) ──
+  const openLogin = () => {
+    setActiveModal('login');
+  };
+
+  const openRegister = (preset?: Profil) => {
+    setPresetProfil(preset);
+    setActiveModal('register');
+  };
+
+  const handleLoginEmail = (email: string) => {
+    // TODO: appel API -> route('login.send')
+    setOtpEmail(email);
+    setActiveModal('otp');
+  };
+
+  const handleRegisterEmail = (email: string, profil: Profil) => {
+    // TODO: appel API -> route('register.send') avec { mail: email, profil }
+    setOtpEmail(email);
+    setActiveModal('otp');
+  };
+
+  const handleVerifyOtp = (code: string) => {
+    // TODO: appel API -> route('otp.verify') avec { otp_code: code }
+    setActiveModal('none');
   };
 
   return (
@@ -449,10 +286,25 @@ const HomeScreen: React.FC = () => {
         />
       </View>
 
-      {/* ── Header sans bouton connexion ── */}
+      {/* ── Header avec Connexion / Inscription (mirrors navbar web) ── */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
         <Image source={require('../assets/logo.png')} style={styles.headerLogo} resizeMode="contain" />
-        {/* Bouton connexion supprimé */}
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.btnConnexion} onPress={openLogin} activeOpacity={0.8}>
+            <Text style={styles.btnConnexionText}>Connexion</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnInscription} onPress={() => openRegister()} activeOpacity={0.8}>
+            <LinearGradient
+              colors={['#1C6BF4', '#1557CC']}
+              style={styles.btnInscriptionGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Text style={styles.btnInscriptionText}>Inscription</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       {/* ── Globe ── */}
@@ -475,13 +327,13 @@ const HomeScreen: React.FC = () => {
       </View>
 
       {/* ── Bottom panel ── */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.bottomPanel,
           {
             opacity: fadeAnim,
-            transform: [{ translateY: translateYAnim }, { scale: scaleAnim }]
-          }
+            transform: [{ translateY: translateYAnim }, { scale: scaleAnim }],
+          },
         ]}
       >
         {/* Pill avec animation */}
@@ -513,83 +365,130 @@ const HomeScreen: React.FC = () => {
           {'  '}Services disponibles
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersRow}>
-          {FILTERS.map((f, index) => (
+          {FILTERS.map((f) => (
             <Animated.View
               key={f.key}
               style={{
-                transform: [{
-                  scale: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.9, 1],
-                  })
-                }]
+                transform: [
+                  {
+                    scale: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    }),
+                  },
+                ],
               }}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.filterChip,
                   selectedFilter === f.key && styles.filterChipActive,
-                  { borderColor: selectedFilter === f.key ? f.color : '#E0E8FF' }
-                ]} 
+                  { borderColor: selectedFilter === f.key ? f.color : '#E0E8FF' },
+                ]}
                 onPress={() => setSelectedFilter(f.key === selectedFilter ? null : f.key)}
                 activeOpacity={0.7}
               >
                 <FontAwesome5 name={f.icon} size={14} color={selectedFilter === f.key ? '#FFFFFF' : f.color} />
-                <Text style={[styles.filterLabel, selectedFilter === f.key && styles.filterLabelActive]}>{f.label}</Text>
+                <Text style={[styles.filterLabel, selectedFilter === f.key && styles.filterLabelActive]}>
+                  {f.label}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           ))}
         </ScrollView>
 
-        {/* CTA row avec gradients - ces boutons ouvrent directement le modal de connexion */}
+        {/* CTA row — ouvre RegisterModal avec le profil pré-rempli */}
         <View style={styles.ctaRow}>
-          <TouchableOpacity style={styles.ctaBtnPrimary} onPress={() => openAuthModal('traveler')} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.ctaBtnPrimary} onPress={() => openRegister(1)} activeOpacity={0.8}>
             <LinearGradient
               colors={['#1C6BF4', '#1557CC', '#0E3D8C']}
               style={styles.ctaGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <FontAwesome5 name="globe-americas" size={15} color="#FFFFFF" />
+              <FontAwesome5 name="plane-departure" size={15} color="#FFFFFF" />
               <Text style={styles.ctaBtnPrimaryText}>Je suis voyageur</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaBtnSecondary} onPress={() => openAuthModal('provider')} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.ctaBtnSecondary} onPress={() => openRegister(0)} activeOpacity={0.8}>
             <LinearGradient
               colors={['#EEF3FF', '#E8EFFF']}
               style={styles.ctaSecondaryGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <FontAwesome5 name="store" size={15} color="#1C6BF4" />
-              <Text style={styles.ctaBtnSecondaryText}>Prestataire</Text>
+              <FontAwesome5 name="home" size={15} color="#1C6BF4" />
+              <Text style={styles.ctaBtnSecondaryText}>Local</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
       </Animated.View>
 
-      <AuthModal visible={modalVisible} onClose={() => setModalVisible(false)} />
+      {/* ── Modals d'authentification (séparés, mirrors web) ── */}
+      <LoginModal
+        visible={activeModal === 'login'}
+        onClose={() => setActiveModal('none')}
+        onSwitchToRegister={() => openRegister()}
+        onSubmitEmail={handleLoginEmail}
+      />
+
+      <RegisterModal
+        visible={activeModal === 'register'}
+        onClose={() => setActiveModal('none')}
+        onSwitchToLogin={openLogin}
+        onSubmitEmail={handleRegisterEmail}
+        presetProfil={presetProfil}
+      />
+
+      <OtpModal
+        visible={activeModal === 'otp'}
+        onClose={() => setActiveModal('none')}
+        email={otpEmail}
+        onVerify={handleVerifyOtp}
+      />
     </View>
   );
 };
 
-// ─── Styles améliorés ─────────────────────────────────────────────────────────
+// ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   bgDecoration: { position: 'absolute', width: width, height: height },
 
-  // Header - sans bouton connexion
+  // Header
   header: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 50 : 30,
-    left: 0, right: 0,
+    left: 0,
+    right: 0,
     zIndex: 20,
     flexDirection: 'row',
-    justifyContent: 'center', // Centré car pas de bouton à droite
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  headerLogo: { width: 120, height: 36 },
+  headerLogo: { width: 110, height: 32 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+
+  btnConnexion: {
+    borderWidth: 1,
+    borderColor: '#E0E4F0',
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+  },
+  btnConnexionText: { fontSize: 12.5, fontWeight: '600', color: '#6b7280' },
+
+  btnInscription: {
+    borderRadius: 100,
+    overflow: 'hidden',
+  },
+  btnInscriptionGradient: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+  },
+  btnInscriptionText: { fontSize: 12.5, fontWeight: '700', color: '#fff' },
 
   // Globe
   globeContainer: {
@@ -600,7 +499,9 @@ const styles = StyleSheet.create({
   globeWebview: { flex: 1, backgroundColor: 'transparent' },
   globeFade: {
     position: 'absolute',
-    bottom: 0, left: 0, right: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     height: 100,
   },
 
@@ -631,7 +532,7 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     marginBottom: 10,
   },
-  headlineAccent: { 
+  headlineAccent: {
     color: '#1C6BF4',
     position: 'relative',
   },
@@ -697,139 +598,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   ctaBtnSecondaryText: { color: '#1C6BF4', fontSize: 15, fontWeight: '700' },
-
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(10,10,30,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 20,
-  },
-  modalGradient: {
-    paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 44 : 30,
-    paddingTop: 14,
-  },
-  modalHandle: {
-    width: 40, height: 4,
-    backgroundColor: '#D0D0E0',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  modalLogo: { width: 140, height: 42, alignSelf: 'center', marginBottom: 16 },
-  modalTitle: {
-    fontSize: 26, fontWeight: '800', color: '#0A0A1A',
-    textAlign: 'center', marginBottom: 6, letterSpacing: -0.5,
-  },
-  modalSubtitle: {
-    fontSize: 14, color: '#8A8AA8', textAlign: 'center',
-    lineHeight: 20, marginBottom: 26, paddingHorizontal: 12,
-  },
-
-  // Social buttons
-  socialGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    gap: 12,
-  },
-  socialGoogle: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E8E8F0',
-  },
-  socialGoogleText: {
-    fontSize: 15, fontWeight: '600', color: '#1A1A2E',
-  },
-  socialApple: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 10,
-  },
-  socialAppleText: {
-    fontSize: 15, fontWeight: '600', color: '#FFFFFF',
-  },
-  socialEmail: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 20,
-  },
-  socialEmailText: {
-    fontSize: 15, fontWeight: '600', color: '#1C6BF4',
-  },
-
-  // Role selector
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  divLine: { flex: 1, height: 1, backgroundColor: '#E8E8F0' },
-  divText: { fontSize: 11, color: '#B0B0C8', fontWeight: '600', letterSpacing: 0.5 },
-  roleRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
-  roleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 14,
-    paddingVertical: 13,
-    borderWidth: 1.5,
-    borderColor: '#E0E4F0',
-    backgroundColor: '#F7F9FF',
-    overflow: 'hidden',
-  },
-  roleBtnActive: { backgroundColor: '#1C6BF4', borderColor: '#1C6BF4' },
-  roleBtnText: { fontSize: 14, fontWeight: '700', color: '#1C6BF4' },
-  roleBtnTextActive: { color: '#FFFFFF' },
-
-  legalText: { fontSize: 11, color: '#C0C0D0', textAlign: 'center', lineHeight: 16 },
-  legalLink: { color: '#9A9AB0', textDecorationLine: 'underline' },
-
-  // Email step
-  emailInputLabel: {
-    fontSize: 11, fontWeight: '700', color: '#9A9AB0',
-    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
-  },
-  emailInputBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#F7F7FB', borderRadius: 14,
-    paddingHorizontal: 16, paddingVertical: 14,
-    borderWidth: 1, borderColor: '#E8E8F0', marginBottom: 10,
-  },
-  emailInput: { flex: 1, fontSize: 15, color: '#0A0A1A' },
-  emailHint: { fontSize: 12, color: '#B0B0C8', lineHeight: 18, marginBottom: 18 },
-
-  submitBtn: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 12,
-    shadowColor: '#1C6BF4',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  submitGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 15,
-  },
-  submitLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
-  backBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10 },
-  backText: { fontSize: 13, color: '#9A9AB0' },
 });
 
 export default HomeScreen;
